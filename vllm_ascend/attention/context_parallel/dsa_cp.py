@@ -8,7 +8,8 @@ import torch.nn.functional as F
 import torch_npu
 from vllm.config import VllmConfig, get_current_vllm_config
 from vllm.distributed import get_tp_group
-from vllm.triton_utils import HAS_TRITON, triton
+from vllm.triton_utils import triton
+from vllm_ascend.utils import supports_triton
 from vllm.v1.attention.backend import AttentionCGSupport, AttentionMetadataBuilder
 from vllm.v1.kv_cache_interface import AttentionSpec
 
@@ -808,7 +809,7 @@ class AscendDSACPMetadataBuilder(AttentionMetadataBuilder[AscendDSAMetadata]):
             local_query_start_loc.fill_(0)
             local_seq_lens.fill_(0)
 
-        if query_start_loc.device.type != "cpu" and HAS_TRITON:
+        if query_start_loc.device.type != "cpu" and supports_triton():
             assert local_query_start_loc is not None and local_seq_lens is not None
             # Use next-power-of-2 block size to avoid wasted compute.
             build_local_metadata_triton[(1,)](
