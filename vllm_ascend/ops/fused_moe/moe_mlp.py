@@ -19,7 +19,7 @@ import torch
 import torch_npu
 from torch.nn.functional import pad
 from vllm.model_executor.layers.fused_moe.activation import MoEActivation
-from vllm.triton_utils import HAS_TRITON
+from vllm_ascend.utils import supports_triton
 
 from vllm_ascend.ascend_forward_context import _EXTRA_CTX, MoECommType
 from vllm_ascend.device.device_op import DeviceOperator
@@ -432,7 +432,7 @@ def quant_apply_mlp(
                 hidden_states, swiglu_out_scale = DeviceOperator.npu_dynamic_quant(
                     hidden_states, act_quant_type=act_quant_type, use_mxfp_quant=use_mxfp_quant
                 )
-            elif HAS_TRITON:
+            elif supports_triton():
                 from vllm_ascend.ops.triton.activation.swiglu_quant import swiglu_quant
 
                 hidden_states, swiglu_out_scale = swiglu_quant(

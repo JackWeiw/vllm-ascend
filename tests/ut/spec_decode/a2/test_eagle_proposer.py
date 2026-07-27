@@ -175,7 +175,7 @@ def test_prepare_inputs_padded_preserves_internal_seq_lens_cpu():
     spec_decode_metadata.cu_num_draft_tokens = torch.tensor([2, 3], dtype=torch.int32)
     valid_sampled_tokens_count = torch.tensor([3, 1], dtype=torch.int32)
 
-    with patch.object(llm_base_proposer, "HAS_TRITON", False):
+    with patch.object(llm_base_proposer, "supports_triton", return_value=False):
         spec_common_attn_metadata, *_ = proposer.prepare_inputs_padded(
             common_attn_metadata,
             spec_decode_metadata,
@@ -3378,13 +3378,13 @@ class TestEagleProposerPrepareInputsPadded:
             return proposer, vllm_config
 
     @pytest.mark.parametrize(
-        "has_triton,num_aicore,num_vectorcore",
+        "triton_supported,num_aicore,num_vectorcore",
         [
             (True, 24, 48),
             (False, -1, -1),
         ],
     )
-    def test_prepare_inputs_padded_basic(self, has_triton, num_aicore, num_vectorcore):
+    def test_prepare_inputs_padded_basic(self, triton_supported, num_aicore, num_vectorcore):
         """Test prepare_inputs_padded with basic scenario.
 
         Setup:
@@ -3426,8 +3426,8 @@ class TestEagleProposerPrepareInputsPadded:
 
         with (
             patch(
-                "vllm_ascend.spec_decode.llm_base_proposer.HAS_TRITON",
-                has_triton,
+                "vllm_ascend.spec_decode.llm_base_proposer.supports_triton",
+                return_value=triton_supported,
             ),
             patch.multiple(
                 "vllm_ascend.ops.triton.triton_utils",
@@ -3504,13 +3504,13 @@ class TestEagleProposerPrepareInputsPadded:
             assert_attr_equal(attr, self.runner, spec_common_attn_metadata)
 
     @pytest.mark.parametrize(
-        "has_triton,num_aicore,num_vectorcore",
+        "triton_supported,num_aicore,num_vectorcore",
         [
             (True, 24, 48),
             (False, -1, -1),
         ],
     )
-    def test_prepare_inputs_padded_all_rejected(self, has_triton, num_aicore, num_vectorcore):
+    def test_prepare_inputs_padded_all_rejected(self, triton_supported, num_aicore, num_vectorcore):
         """Test prepare_inputs_padded when all draft tokens are rejected.
 
         Setup:
@@ -3552,8 +3552,8 @@ class TestEagleProposerPrepareInputsPadded:
 
         with (
             patch(
-                "vllm_ascend.spec_decode.llm_base_proposer.HAS_TRITON",
-                has_triton,
+                "vllm_ascend.spec_decode.llm_base_proposer.supports_triton",
+                return_value=triton_supported,
             ),
             patch.multiple(
                 "vllm_ascend.ops.triton.triton_utils",

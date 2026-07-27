@@ -3,7 +3,7 @@ import torch_npu
 import vllm.envs as envs
 from vllm.distributed.parallel_state import get_tp_group
 from vllm.logger import logger
-from vllm.triton_utils import HAS_TRITON
+from vllm_ascend.utils import supports_triton
 from vllm.v1.sample.metadata import SamplingMetadata
 from vllm.v1.sample.ops.topk_topp_sampler import TopKTopPSampler
 from vllm.v1.sample.sampler import Sampler
@@ -51,7 +51,7 @@ class AscendSampler(Sampler):
         output_token_ids: list[list[int]],
     ) -> torch.Tensor:
         """Use Triton-Ascend penalties on NPU when Triton is available; else vLLM default."""
-        if not HAS_TRITON:
+        if not supports_triton():
             logger.warning_once(
                 "[sample/sampler] Triton not available, falling back to vLLM default "
                 "penalty implementation. Penalty performance may be degraded on NPU. "
@@ -77,7 +77,7 @@ class AscendSampler(Sampler):
         logger.debug(
             "[sample/sampler] AscendSampler initialized. logprobs_mode=%s, triton_available=%s",
             logprobs_mode,
-            HAS_TRITON,
+            supports_triton(),
         )
 
     def prepare_sampling(self, top_k):
